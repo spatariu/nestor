@@ -1,6 +1,5 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-// src/routes/groupRoutes.ts
 const express_1 = require("express");
 const groupController_1 = require("../contollers/groupController");
 const router = (0, express_1.Router)();

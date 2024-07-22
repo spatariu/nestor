@@ -3,25 +3,27 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-// src/app.ts
 const express_1 = __importDefault(require("express"));
+const body_parser_1 = __importDefault(require("body-parser"));
 const cors_1 = __importDefault(require("cors"));
-const init_1 = require("./models/init");
-const groupRoutes_1 = __importDefault(require("./routes/groupRoutes"));
 const personRoutes_1 = __importDefault(require("./routes/personRoutes"));
+const groupRoutes_1 = __importDefault(require("./routes/groupRoutes"));
 const app = (0, express_1.default)();
+const PORT = 3000;
+// Middleware
 app.use((0, cors_1.default)());
-app.use(express_1.default.json());
-app.use('/api/groups', groupRoutes_1.default);
-app.use('/api/people', personRoutes_1.default);
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, async () => {
-    console.log(`Server is running on port ${PORT}`);
-    try {
-        await init_1.sequelize.sync({ force: false }); // Sync models with database
-        console.log('Database synced');
-    }
-    catch (error) {
-        console.error('Unable to sync the database:', error);
-    }
+app.use(body_parser_1.default.json());
+// Routes
+app.use('/people', personRoutes_1.default); // Mount the person routes at /people
+app.use('/groups', groupRoutes_1.default); // Mount the group routes at /groups
+// Root route
+app.get('/', (req, res) => {
+    res.send('API is running...');
+});
+// Error handling middleware
+app.use((req, res) => {
+    res.status(404).send('Not Found');
+});
+app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
 });

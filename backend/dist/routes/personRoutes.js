@@ -1,6 +1,5 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-// src/routes/personRoutes.ts
 const express_1 = require("express");
 const personController_1 = require("../contollers/personController");
 const router = (0, express_1.Router)();

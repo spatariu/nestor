@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { Table, Button } from 'react-bootstrap';
 import { getPeople } from '../services/api';
 
@@ -39,7 +38,7 @@ function PeoplePage() {
               <td>{person.lastName}</td>
               <td>{person.jobTitle}</td>
               <td>
-                <Button variant="warning" onClick={() => editPerson(person.id)}>Edit</Button>
+                <Button variant="warning" onClick={() => editPerson(person.id)}>Edit</Button>{' '}
                 <Button variant="danger" onClick={() => deletePerson(person.id)}>Delete</Button>
               </td>
             </tr>

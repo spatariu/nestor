@@ -1,4 +1,3 @@
-// src/routes/groupRoutes.ts
 import { Router } from 'express';
 import { createGroup, updateGroup, getGroups, deleteGroup, movePerson, moveGroup } from '../contollers/groupController';
 

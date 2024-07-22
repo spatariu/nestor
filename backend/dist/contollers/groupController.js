@@ -1,125 +1,85 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.moveGroup = exports.movePerson = exports.deleteGroup = exports.updateGroup = exports.createGroup = exports.getGroups = void 0;
-const group_1 = __importDefault(require("../models/group"));
-const person_1 = __importDefault(require("../models/person"));
-// Get all groups
-const getGroups = async (req, res) => {
-    try {
-        const groups = await group_1.default.findAll();
-        res.status(200).json(groups);
-    }
-    catch (error) {
-        console.error('Error fetching groups:', error);
-        res.status(500).json({ message: 'Internal server error' });
-    }
-};
-exports.getGroups = getGroups;
-// Create a new group
+exports.moveGroup = exports.movePerson = exports.deleteGroup = exports.getGroups = exports.updateGroup = exports.createGroup = void 0;
+const client_1 = require("@prisma/client");
+const prisma = new client_1.PrismaClient();
 const createGroup = async (req, res) => {
-    const { name } = req.body;
-    if (!name) {
-        return res.status(400).json({ message: 'Group name is required' });
-    }
+    const { name, parentGroupId } = req.body;
     try {
-        const newGroup = await group_1.default.create({ name });
-        res.status(201).json(newGroup);
+        const group = await prisma.group.create({
+            data: {
+                name,
+                parentGroupId,
+            },
+        });
+        res.status(201).json(group);
     }
     catch (error) {
-        console.error('Error creating group:', error);
-        res.status(500).json({ message: 'Internal server error' });
+        res.status(500).json({ error: 'Failed to create group' });
     }
 };
 exports.createGroup = createGroup;
-// Update a group by ID
 const updateGroup = async (req, res) => {
-    const groupId = parseInt(req.params.id, 10);
-    const { name } = req.body;
-    if (!name) {
-        return res.status(400).json({ message: 'Group name is required' });
-    }
+    const { id } = req.params;
+    const { name, parentGroupId } = req.body;
     try {
-        const [updated] = await group_1.default.update({ name }, { where: { id: groupId } });
-        if (updated) {
-            const updatedGroup = await group_1.default.findByPk(groupId);
-            res.status(200).json(updatedGroup);
-        }
-        else {
-            res.status(404).json({ message: 'Group not found' });
-        }
+        const group = await prisma.group.update({
+            where: { id: Number(id) },
+            data: { name, parentGroupId },
+        });
+        res.json(group);
     }
     catch (error) {
-        console.error('Error updating group:', error);
-        res.status(500).json({ message: 'Internal server error' });
+        res.status(500).json({ error: 'Failed to update group' });
     }
 };
 exports.updateGroup = updateGroup;
-// Delete a group by ID
-const deleteGroup = async (req, res) => {
-    const groupId = parseInt(req.params.id, 10);
+const getGroups = async (req, res) => {
     try {
-        const deleted = await group_1.default.destroy({ where: { id: groupId } });
-        if (deleted) {
-            res.status(204).send();
-        }
-        else {
-            res.status(404).json({ message: 'Group not found' });
-        }
+        const groups = await prisma.group.findMany();
+        res.json(groups);
     }
     catch (error) {
-        console.error('Error deleting group:', error);
-        res.status(500).json({ message: 'Internal server error' });
+        res.status(500).json({ error: 'Failed to fetch groups' });
+    }
+};
+exports.getGroups = getGroups;
+const deleteGroup = async (req, res) => {
+    const { id } = req.params;
+    try {
+        await prisma.group.delete({ where: { id: Number(id) } });
+        res.status(204).end();
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to delete group' });
     }
 };
 exports.deleteGroup = deleteGroup;
-// Move a person to a new group
 const movePerson = async (req, res) => {
-    const personId = parseInt(req.params.personId, 10);
-    const newGroupId = parseInt(req.params.newGroupId, 10);
+    const { personId, newGroupId } = req.params;
     try {
-        const person = await person_1.default.findByPk(personId);
-        const newGroup = await group_1.default.findByPk(newGroupId);
-        if (!person) {
-            return res.status(404).json({ message: 'Person not found' });
-        }
-        if (!newGroup) {
-            return res.status(404).json({ message: 'Group not found' });
-        }
-        person.groupId = newGroupId;
-        await person.save();
-        res.status(200).json(person);
+        const person = await prisma.person.update({
+            where: { id: Number(personId) },
+            data: { groupId: Number(newGroupId) },
+        });
+        res.json(person);
     }
     catch (error) {
-        console.error('Error moving person:', error);
-        res.status(500).json({ message: 'Internal server error' });
+        res.status(500).json({ error: 'Failed to move person' });
     }
 };
 exports.movePerson = movePerson;
-// Move a group (including its members) to a new group
 const moveGroup = async (req, res) => {
-    const groupId = parseInt(req.params.groupId, 10);
-    const newParentGroupId = parseInt(req.params.newParentGroupId, 10);
+    const { groupId, newParentGroupId } = req.params;
     try {
-        const group = await group_1.default.findByPk(groupId, { include: [{ model: group_1.default, as: 'subGroups' }, { model: person_1.default, as: 'members' }] });
-        const newParentGroup = await group_1.default.findByPk(newParentGroupId);
-        if (!group) {
-            return res.status(404).json({ message: 'Group not found' });
-        }
-        if (!newParentGroup) {
-            return res.status(404).json({ message: 'New parent group not found' });
-        }
-        // Move the group to the new parent group (assuming hierarchical model; adjust if necessary)
-        group.parentGroupId = newParentGroupId;
-        await group.save();
-        // Optionally, handle nested groups and members if required
-        res.status(200).json(group);
+        const group = await prisma.group.update({
+            where: { id: Number(groupId) },
+            data: { parentGroupId: Number(newParentGroupId) },
+        });
+        res.json(group);
     }
     catch (error) {
-        console.error('Error moving group:', error);
-        res.status(500).json({ message: 'Internal server error' });
+        res.status(500).json({ error: 'Failed to move group' });
     }
 };
 exports.moveGroup = moveGroup;
