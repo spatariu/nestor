@@ -3,15 +3,16 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import PeoplePage from './pages/PeoplePage';
 import GroupsPage from './pages/GroupsPage';
+import HomePage from './pages/HomePage';
 
 function App() {
   return (
     <Router>
-      <div className="container">
+      <div>
         <Routes>
-          <Route path="/people" Component={PeoplePage} />
+          <Route exact path="/" element={<HomePage />} />
+          <Route path="/people" element={<PeoplePage />} />
           <Route path="/groups" element={<GroupsPage />} />
-          <Route path="/" element={<div>Home Page</div>} />
         </Routes>
       </div>
     </Router>

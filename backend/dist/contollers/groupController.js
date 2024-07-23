@@ -36,10 +36,15 @@ const updateGroup = async (req, res) => {
 exports.updateGroup = updateGroup;
 const getGroups = async (req, res) => {
     try {
+        // Fetch groups without parentGroup relation
         const groups = await prisma.group.findMany();
-        res.json(groups);
+        res.json(groups.map(group => ({
+            ...group,
+            parentGroupName: 'None' // Default value; you will need to update this if parentGroupName should be fetched differently
+        })));
     }
     catch (error) {
+        console.error('Error fetching groups:', error);
         res.status(500).json({ error: 'Failed to fetch groups' });
     }
 };
